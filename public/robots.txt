@@ -1,0 +1,6 @@
+# NOTE: crawlers only read robots.txt at the host root (akadannyhugo.github.io/robots.txt),
+# so this file is informational on a GitHub Pages project site. Submit the sitemap in
+# Google Search Console / Bing Webmaster Tools instead, or move to a custom domain.
+User-agent: *
+Allow: /
+Sitemap: https://akadannyhugo.github.io/stack-vs-debt/sitemap.xml
