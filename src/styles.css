@@ -23,3 +23,4 @@ button.link{background:none;color:var(--accent);padding:0;font-weight:500;font-s
 table{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0}th,td{text-align:right;padding:5px 4px;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left;color:var(--muted)}
 tr.net td{font-weight:700}.plan{font-size:12px}.locked p{margin:0 0 8px}
 footer{margin-top:28px;font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px}
+.aff{border-style:dashed}.aff p{margin:0 0 8px;line-height:1.45}.aff a{color:var(--accent);font-weight:600}.aff .disc{border-top:1px solid var(--line);padding-top:8px;margin-top:10px}

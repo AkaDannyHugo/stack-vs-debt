@@ -1,5 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { countInterest } from './analytics';
+import ResultCards from './ResultCards';
+import { AFFILIATE_CARDS_ENABLED } from './affiliates';
+import { DISCLAIMER_FOOTER, DISCLAIMER_FOOTER_AFFILIATE, DISCLAIMER_NEAR_RESULTS } from './disclaimer';
+import { parsePrefill, slugFrom, shouldPersist, mayClearSaved, SCENARIO_KEY } from './prefill';
 import { type Holding, type Debt, type Settings, type Scenario, type AssetKind, SCENARIOS, STRATEGIES, STRATEGY_LABEL, simulate, runwayMonths, breakEvenMultiple, verdict, value, totalDebt, monthlyInterest } from './engine';
 
 // EXAMPLE DATA ONLY: made-up numbers so the screen isn't empty.
@@ -31,9 +35,17 @@ async function fetchSpot(sym: string): Promise<number | null> {
   } catch { return null; }
 }
 
+function readSaved() {
+  try { const s = localStorage.getItem(KEY); if (s) return JSON.parse(s); } catch { /* ignore */ }
+  return null;
+}
 function load() {
-  try { const s = localStorage.getItem(KEY); if (s) return { ...JSON.parse(s), isExample: false }; } catch { /* ignore */ }
-  return { ...structuredClone(EXAMPLE), isExample: true };
+  const saved = readSaved();
+  // A worked-example link pre-fills the form, but is never written over saved numbers (see prefill.ts).
+  const pre = typeof location !== 'undefined' ? parsePrefill(location.search) : null;
+  if (pre) return { holdings: pre.holdings, debts: pre.debts, settings: { ...EXAMPLE.settings, ...pre.settings }, isExample: true, fromUrl: true, hasSaved: !!saved, pendingUsd: pre.usd };
+  if (saved) return { ...saved, isExample: false, fromUrl: false, hasSaved: true, pendingUsd: {} };
+  return { ...structuredClone(EXAMPLE), isExample: true, fromUrl: false, hasSaved: false, pendingUsd: {} };
 }
 
 export default function App() {
@@ -42,6 +54,15 @@ export default function App() {
   const [debts, setDebts] = useState<Debt[]>(init.debts);
   const [st, setSt] = useState<Settings>(init.settings);
   const [isExample, setIsExample] = useState<boolean>(init.isExample);
+  const [fromUrl, setFromUrl] = useState<boolean>(init.fromUrl);
+  const hasSaved: boolean = init.hasSaved;
+  const pendingUsd = useRef<Record<string, number>>(init.pendingUsd);
+  useEffect(() => { try { const s = slugFrom(location.search, document.referrer); if (s) sessionStorage.setItem(SCENARIO_KEY, s); } catch { /* ignore */ } }, []);
+  const backToSaved = () => {
+    const s = readSaved(); if (!s) return;
+    setHoldings(s.holdings); setDebts(s.debts); setSt(s.settings); pendingUsd.current = {}; setFromUrl(false); setIsExample(false);
+    try { history.replaceState(null, '', location.pathname); } catch { /* ignore */ }
+  };
   const [scenario, setScenario] = useState<Scenario>('flat');
   const [priceStatus, setPriceStatus] = useState('');
   const [showPlan, setShowPlan] = useState(false);
@@ -54,7 +75,7 @@ export default function App() {
     setInterested(true);
   };
 
-  useEffect(() => { if (!isExample) localStorage.setItem(KEY, JSON.stringify({ holdings, debts, settings: st })); }, [holdings, debts, st, isExample]);
+  useEffect(() => { if (shouldPersist({ isExample, fromUrl, hasSaved })) localStorage.setItem(KEY, JSON.stringify({ holdings, debts, settings: st })); }, [holdings, debts, st, isExample, fromUrl, hasSaved]);
   const touch = () => setIsExample(false);
 
   const refreshPrices = async () => {
@@ -63,6 +84,8 @@ export default function App() {
     const next = await Promise.all(holdings.map(async h => {
       if (h.kind !== 'crypto' || !h.symbol) return h;
       const p = await fetchSpot(h.symbol); if (p === null) { fails++; return h; }
+      const u = pendingUsd.current[h.id];
+      if (u !== undefined) { delete pendingUsd.current[h.id]; return { ...h, price: p, units: u / p }; } // URL values are USD
       return { ...h, price: p };
     }));
     setHoldings(next);
@@ -80,7 +103,7 @@ export default function App() {
   const upH = (id: string, patch: Partial<Holding>) => { touch(); setHoldings(hs => hs.map(h => h.id === id ? { ...h, ...patch } : h)); };
   const upD = (id: string, patch: Partial<Debt>) => { touch(); setDebts(ds => ds.map(d => d.id === id ? { ...d, ...patch } : d)); };
   const num = (s: string) => { const n = parseFloat(s); return Number.isFinite(n) ? n : 0; };
-  const clearAll = () => { localStorage.removeItem(KEY); setHoldings([{ id: uid(), label: 'Bitcoin', kind: 'crypto', symbol: 'BTC', units: 0, price: holdings.find(h => h.symbol === 'BTC')?.price ?? 0 }]); setDebts([{ id: uid(), name: 'Card 1', balance: 0, apr: 24, minPayment: 0 }]); setSt({ ...EXAMPLE.settings, gap: 0 }); setIsExample(false); };
+  const clearAll = () => { if (mayClearSaved({ fromUrl, hasSaved })) localStorage.removeItem(KEY); pendingUsd.current = {}; setHoldings([{ id: uid(), label: 'Bitcoin', kind: 'crypto', symbol: 'BTC', units: 0, price: holdings.find(h => h.symbol === 'BTC')?.price ?? 0 }]); setDebts([{ id: uid(), name: 'Card 1', balance: 0, apr: 24, minPayment: 0 }]); setSt({ ...EXAMPLE.settings, gap: 0 }); setIsExample(false); };
 
   return (
     <main>
@@ -90,7 +113,8 @@ export default function App() {
         <p className="private">🔒 No login. Your numbers stay in this browser only.</p>
       </header>
 
-      {isExample && <div className="banner">You're looking at <b>example numbers</b> (made up). Change any field to use your own, or <button className="link" onClick={clearAll}>start blank</button>.</div>}
+      {fromUrl && <div className="banner">Pre-filled from a worked example (<b>made-up numbers</b>). Change any field to use your own.{hasSaved && <> Your saved numbers are untouched and edits here are not saved over them. <button className="link" onClick={backToSaved}>Back to my saved numbers</button></>}</div>}
+      {isExample && !fromUrl && <div className="banner">You're looking at <b>example numbers</b> (made up). Change any field to use your own, or <button className="link" onClick={clearAll}>start blank</button>.</div>}
 
       <section>
         <h2>1. What you hold</h2>
@@ -167,7 +191,7 @@ export default function App() {
           <div className="card verdict">
             <p className="headline">{v.headline}</p>
             <ul>{v.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
-            <p className="note">Model output from the numbers you entered, not a recommendation. Price paths are scenarios, not forecasts.</p>
+            <p className="note">{DISCLAIMER_NEAR_RESULTS}</p>
           </div>
         </section>
 
@@ -191,6 +215,9 @@ export default function App() {
           ))}
         </section>
 
+        {/* Cards are compiled out entirely while AFFILIATE_CARDS_ENABLED is false (no links, copy or config in the bundle). */}
+        {AFFILIATE_CARDS_ENABLED && <ResultCards ctx={{ hasCrypto: !!btc, sellsCrypto: !!btc && sims.some(r => r.soldToday > 0 || r.rows.some(x => x.sold > 0)), taxPct: st.taxPct, topStrategy: v.best }} />}
+
         <section>
           <h2>Month by month (model)</h2>
           <div className="card">
@@ -209,7 +236,7 @@ export default function App() {
       </>}
 
       <footer>
-        <p><b>Not financial advice.</b> This is a calculator for numbers you type in. Prices move, taxes vary, and the price paths are examples, not forecasts. Talk to a licensed professional or a nonprofit credit counselor before big decisions.</p>
+        <p><b>Not financial advice.</b> {DISCLAIMER_FOOTER}{AFFILIATE_CARDS_ENABLED ? DISCLAIMER_FOOTER_AFFILIATE : ''}</p>
         <p>If your stack runs out, the model adds any unpaid gap to your highest-rate debt. Tax is a simple % of each sale, not a real tax calculation.</p>
       </footer>
     </main>

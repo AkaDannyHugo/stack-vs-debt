@@ -6,6 +6,11 @@ type GC = { count?: (o: { path: string; title?: string; event?: boolean }) => vo
 export function countInterest(): void {
   // Counts a click only: no email, no form values, no numbers the visitor typed.
   try { (window as unknown as { goatcounter?: GC }).goatcounter?.count?.({ path: 'full-plan-interest', title: "I'd want this (Full plan)", event: true }); } catch { /* ignore */ }
+  // Per-scenario attribution: the worked-example slug saved for this session (see prefill.ts / App.tsx).
+  try {
+    const slug = sessionStorage.getItem('stack-vs-debt:scenario');
+    if (slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) (window as unknown as { goatcounter?: GC }).goatcounter?.count?.({ path: 'full-plan-interest/scenario/' + slug, title: "I'd want this (Full report) from " + slug, event: true });
+  } catch { /* ignore */ }
   if (!ON_VERCEL) return;
   try { track('full_plan_interest'); } catch { /* ignore */ }
   try { pageview({ path: '/interest/full-plan', route: '/interest/full-plan' }); } catch { /* ignore */ }
