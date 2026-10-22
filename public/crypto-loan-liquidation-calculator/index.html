@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypto-Backed Loan Liquidation Price &amp; APR Stress Test Calculator</title>
+<meta name="description" content="Free math-only calculator: enter collateral, loan, LTV thresholds and APR to see the liquidation price, margin-call price, total interest and what a 20-60% price drop does.">
+<link rel="canonical" href="https://akadannyhugo.github.io/stack-vs-debt/crypto-loan-liquidation-calculator/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%2310213f%27/%3E%3Crect x=%277%27 y=%2716%27 width=%276%27 height=%2710%27 fill=%27%232f6fed%27/%3E%3Crect x=%2719%27 y=%276%27 width=%276%27 height=%2720%27 fill=%27%23ffffff%27/%3E%3C/svg%3E">
+<meta property="og:type" content="article"><meta property="og:site_name" content="Stack vs Debt">
+<meta property="og:title" content="Crypto-Backed Loan Liquidation Price &amp; APR Stress Test Calculator"><meta property="og:description" content="Free math-only calculator: enter collateral, loan, LTV thresholds and APR to see the liquidation price, margin-call price, total interest and what a 20-60% price drop does.">
+<meta property="og:url" content="https://akadannyhugo.github.io/stack-vs-debt/crypto-loan-liquidation-calculator/"><meta property="og:image" content="https://akadannyhugo.github.io/stack-vs-debt/IMG_4457.png">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Crypto-Backed Loan Liquidation Price &amp; APR Stress Test Calculator">
+<meta name="twitter:description" content="Free math-only calculator: enter collateral, loan, LTV thresholds and APR to see the liquidation price, margin-call price, total interest and what a 20-60% price drop does."><meta name="twitter:image" content="https://akadannyhugo.github.io/stack-vs-debt/IMG_4457.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How is the liquidation price of a crypto-backed loan calculated?", "acceptedAnswer": {"@type": "Answer", "text": "Divide the loan balance by the number of coins posted times the liquidation LTV. For example (made-up numbers), a $12,000 balance on 0.5 BTC with an 80% liquidation LTV gives $12,000 / (0.5 x 0.80) = $30,000."}}, {"@type": "Question", "name": "What is the difference between a margin call and a liquidation?", "acceptedAnswer": {"@type": "Answer", "text": "A margin call is the LTV level where the loan terms ask for more collateral or a payment. Liquidation is the higher LTV level where collateral is sold to cover the loan. Each loan agreement sets its own levels, fees and grace periods."}}, {"@type": "Question", "name": "Does interest change the liquidation price?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, if interest is added to the loan instead of paid in cash. A larger balance means a higher liquidation price, so the price drop needed to reach it gets smaller over time."}}]}</script>
+<style>body{font:17px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;color:#1d2330;background:#f7f8fa}
+main{max-width:720px;margin:0 auto;padding:24px 18px 60px}h1{font-size:1.9rem;line-height:1.25;margin:.4em 0}
+h2{font-size:1.3rem;margin-top:1.8em}.answer{background:#fff;border-left:4px solid #2f6fed;padding:12px 16px;border-radius:6px}
+.cta{display:inline-block;background:#2f6fed;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;margin:8px 0}
+table{border-collapse:collapse;width:100%;background:#fff}td,th{border:1px solid #dde1e8;padding:6px 10px;text-align:left}
+.note{font-size:.9rem;color:#5a6272}nav a{color:#2f6fed;margin-right:12px}footer{margin-top:40px;font-size:.88rem;color:#5a6272}
+@media(max-width:480px){table{font-size:.88rem}td,th{padding:5px 7px}}
+form.calc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;background:#fff;padding:14px;border-radius:8px;border:1px solid #dde1e8}
+form.calc label{min-width:0;display:flex;flex-direction:column;font-size:.9rem;font-weight:600;color:#3a4252}
+form.calc input,form.calc select{font:inherit;font-weight:400;padding:8px;border:1px solid #c7ccd6;border-radius:6px;margin-top:4px;min-width:0}
+form.calc .wide{grid-column:1/-1}form.calc fieldset{grid-column:1/-1;border:0;padding:0;margin:6px 0 0;font-weight:700;color:#10213f}
+.res{background:#fff;border:1px solid #dde1e8;border-radius:8px;padding:12px 16px;margin-top:14px}
+.res dl{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:0}.res dt{color:#3a4252}.res dd{margin:0;font-weight:700;text-align:right}
+.scroll{overflow-x:auto}.ok{color:#1b7a3a}.mc{color:#a35b00}.liq{color:#b3261e}.warn{background:#fff6e5;border-left:4px solid #e0a100;padding:8px 12px;border-radius:6px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}.btnrow button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid #2f6fed;background:#fff;color:#2f6fed;cursor:pointer}
+@media(max-width:480px){#tbl{font-size:.8rem}#tbl td,#tbl th{padding:4px 5px}}</style></head>
+<body><main>
+<nav><a href="https://akadannyhugo.github.io/stack-vs-debt/">&larr; Stack vs Debt calculator</a></nav>
+<h1>Crypto-backed loan: liquidation price and APR stress test</h1>
+<p class="answer"><b>Short answer:</b> Liquidation price = loan balance ÷ (coins held as collateral × liquidation LTV). With 0.5 BTC as collateral, a $12,000 balance and an 80% liquidation LTV (made-up numbers), that is $12,000 ÷ (0.5 × 0.80) = $30,000. If interest is added to the loan, the balance grows and the liquidation price rises over time. The calculator below runs the numbers you enter; it does not compare, rate or recommend any lender.</p>
+
+
+<p class="note" id="exnote"><b>The form starts with made-up example numbers.</b> Type over them with the terms you want to test. Nothing is sent anywhere; the math runs in your browser.</p>
+<form class="calc" id="calc" onsubmit="return false">
+<fieldset>Collateral</fieldset>
+<label>Coins held as collateral<input id="coins" type="number" inputmode="decimal" step="any" min="0"></label>
+<label>Coin price today ($)<input id="price" type="number" inputmode="decimal" step="any" min="0"></label>
+<fieldset>Loan terms (as written in the loan agreement)</fieldset>
+<label>Loan amount ($)<input id="loan" type="number" inputmode="decimal" step="any" min="0"></label>
+<label>Max starting LTV (%)<input id="startLtvPct" type="number" inputmode="decimal" step="any" min="0"></label>
+<label>Margin-call LTV (%)<input id="marginCallPct" type="number" inputmode="decimal" step="any" min="0"></label>
+<label>Liquidation LTV (%)<input id="liquidationPct" type="number" inputmode="decimal" step="any" min="0"></label>
+<label>APR (%)<input id="aprPct" type="number" inputmode="decimal" step="any" min="0"></label>
+<label>Term (months)<input id="months" type="number" inputmode="numeric" step="1" min="1"></label>
+<label class="wide">Interest<select id="interestMode"><option value="paid">Paid monthly in cash (balance stays the same)</option><option value="added">Added to the loan each month (balance grows)</option></select></label>
+<fieldset>Price-drop scenario</fieldset>
+<label class="wide">Your own drop to test (%)<input id="dropPct" type="number" inputmode="decimal" step="any" min="0" max="100"></label>
+<div class="btnrow wide"><button type="button" id="reset">Reset to example</button><button type="button" id="blank">Start blank</button></div>
+</form>
+
+<div class="res" id="out" aria-live="polite"><noscript>Turn on JavaScript to run the calculator. The formulas are below.</noscript></div>
+<p class="note">Model output from the numbers you entered, not a quote, rating or recommendation. Loan agreements differ: some use different LTV definitions, add fees, liquidate only part of the collateral, or give a grace period after a margin call. Check the agreement's own terms.</p>
+
+<h2>What happens at -20%, -40% and -60%</h2>
+<div class="scroll"><table id="tbl"><thead><tr><th>Price drop</th><th>Coin price</th><th>LTV</th><th>Status</th><th>To bring LTV back to the margin-call level</th></tr></thead><tbody></tbody></table></div>
+<p class="note">Status uses today's balance; when interest is added to the loan, the row also shows the LTV and any status change by the end of the term. "Cash" is the amount paid toward the loan, and "coins" the extra collateral posted, that would bring LTV back to the margin-call threshold at that price. At a "liquidation" row, the model assumes the lender's liquidation would already have been triggered on the way down.</p>
+
+<h2>The formulas</h2>
+<ul>
+<li><b>LTV</b> = loan balance &divide; (coins &times; coin price)</li>
+<li><b>Margin-call price</b> = balance &divide; (coins &times; margin-call LTV)</li>
+<li><b>Liquidation price</b> = balance &divide; (coins &times; liquidation LTV)</li>
+<li><b>Drop to liquidation</b> = 1 &minus; liquidation price &divide; today's price</li>
+<li><b>Interest paid monthly</b> = loan &times; APR &divide; 12 &times; months. <b>Interest added to the loan</b> = loan &times; ((1 + APR&divide;12)<sup>months</sup> &minus; 1)</li>
+</ul>
+
+<h2>Example (made-up numbers)</h2>
+<p>0.5 BTC posted at a hypothetical $60,000 (collateral $30,000), a $12,000 loan (40% LTV), margin call at 70%, liquidation at 80%, 12% APR for 12 months.</p>
+<table><tr><th>Result</th><th>Value</th></tr>
+<tr><td>Margin-call price</td><td>~$34,286 (a ~42.9% drop)</td></tr>
+<tr><td>Liquidation price</td><td>$30,000 (a 50% drop)</td></tr>
+<tr><td>Total interest, paid monthly</td><td>$1,440</td></tr>
+<tr><td>Total interest, added to the loan</td><td>~$1,522; the liquidation price climbs to ~$33,805 by month 12 (a ~43.7% drop)</td></tr></table>
+<p class="note">Prices and terms are invented for illustration. They are not a forecast or a quote from any lender.</p>
+
+<h2>Compare with selling part of the stack</h2>
+<p>A loan keeps the coins but adds a price level where they can be sold for you, plus interest. Selling has no liquidation price but may create tax (rules vary; check with a tax professional) and gives up future price moves. The <a href="https://akadannyhugo.github.io/stack-vs-debt/">Stack vs Debt calculator</a> runs the selling side under a crash, a flat market and a rally, so both sets of numbers can sit side by side.</p>
+
+<p><a class="cta" href="https://akadannyhugo.github.io/stack-vs-debt/">Open the Stack vs Debt sell-or-hold calculator &rarr;</a><br><span class="note">Runs in your browser. Your numbers stay on your device.</span></p>
+<h2>Common questions</h2><h3>How is the liquidation price of a crypto-backed loan calculated?</h3><p>Divide the loan balance by the number of coins posted times the liquidation LTV. For example (made-up numbers), a $12,000 balance on 0.5 BTC with an 80% liquidation LTV gives $12,000 / (0.5 x 0.80) = $30,000.</p><h3>What is the difference between a margin call and a liquidation?</h3><p>A margin call is the LTV level where the loan terms ask for more collateral or a payment. Liquidation is the higher LTV level where collateral is sold to cover the loan. Each loan agreement sets its own levels, fees and grace periods.</p><h3>Does interest change the liquidation price?</h3><p>Yes, if interest is added to the loan instead of paid in cash. A larger balance means a higher liquidation price, so the price drop needed to reach it gets smaller over time.</p>
+<h2>Related</h2><ul><li><a href="https://akadannyhugo.github.io/stack-vs-debt/sell-crypto-to-pay-off-debt/">Should I sell my crypto to pay off debt, or keep holding?</a></li><li><a href="https://akadannyhugo.github.io/stack-vs-debt/sell-bitcoin-to-pay-off-credit-card/">Should I sell bitcoin to pay off my credit card?</a></li><li><a href="https://akadannyhugo.github.io/stack-vs-debt/sell-stocks-to-pay-off-credit-card-debt/">Should I sell stocks to pay off credit card debt?</a></li><li><a href="https://akadannyhugo.github.io/stack-vs-debt/how-long-will-my-crypto-last/">How long will my crypto last if I keep selling to cover my bills?</a></li><li><a href="https://akadannyhugo.github.io/stack-vs-debt/balance-transfer-vs-selling-crypto/">Should I do a 0% balance transfer or sell my crypto to pay off my card?</a></li><li><a href="https://akadannyhugo.github.io/stack-vs-debt/sell-crypto-to-pay-off-car-or-student-loan/">Should I sell crypto to pay off my car loan or student loans?</a></li></ul>
+<script type="module">
+import { stressTest, EXAMPLE } from './liq.js';
+const F = ['coins','price','loan','startLtvPct','marginCallPct','liquidationPct','aprPct','months','dropPct'];
+const $ = id => document.getElementById(id);
+const usd = n => !Number.isFinite(n) ? '\u2014' : '$' + (Math.abs(n) >= 100 ? Math.round(n).toLocaleString('en-US') : n.toLocaleString('en-US', { maximumFractionDigits: 2 }));
+const pct = n => !Number.isFinite(n) ? '\u2014' : (Math.round(n * 10) / 10).toLocaleString('en-US') + '%';
+const coins = n => !Number.isFinite(n) ? '\u2014' : n.toLocaleString('en-US', { maximumFractionDigits: 6 });
+const ST = { ok: ['ok', 'Below margin call'], 'margin-call': ['mc', 'Margin call'], liquidation: ['liq', 'Liquidation'] };
+let example = true;
+function fill(v) { F.forEach(k => $(k).value = v[k] ?? ''); $('interestMode').value = v.interestMode || 'paid'; }
+function read() { const o = {}; F.forEach(k => o[k] = $(k).value === '' ? NaN : parseFloat($(k).value)); o.interestMode = $('interestMode').value; return o; }
+function render() {
+  $('exnote').style.display = example ? '' : 'none';
+  const i = read(); const r = stressTest(i); const tb = document.querySelector('#tbl tbody');
+  if (r.errors.length) { $('out').innerHTML = '<p class="warn">' + r.errors.join('<br>') + '</p>'; tb.innerHTML = ''; return; }
+  const added = i.interestMode === 'added';
+  let h = r.warnings.map(w => '<p class="warn">' + w + '</p>').join('');
+  if (r.startStatus !== 'ok') h += '<p class="warn">At today\u2019s price this loan is already at the ' + (r.startStatus === 'liquidation' ? 'liquidation' : 'margin-call') + ' level in this model.</p>';
+  h += '<dl>'
+    + '<dt>Collateral value today</dt><dd>' + usd(r.collateral) + '</dd>'
+    + '<dt>Starting LTV</dt><dd>' + pct(r.startLtv) + '</dd>'
+    + '<dt>Margin-call price</dt><dd class="mc">' + usd(r.marginCallPrice) + '</dd>'
+    + '<dt>Drop to margin call</dt><dd>' + pct(r.dropToMarginCallPct) + '</dd>'
+    + '<dt>Liquidation price</dt><dd class="liq">' + usd(r.liquidationPrice) + '</dd>'
+    + '<dt>Drop to liquidation</dt><dd>' + pct(r.dropToLiquidationPct) + '</dd>'
+    + '<dt>Total interest over ' + i.months + ' months</dt><dd>' + usd(r.totalInterest) + '</dd>'
+    + (added ? '<dt>Balance at month ' + i.months + '</dt><dd>' + usd(r.endBalance) + '</dd><dt>Liquidation price at month ' + i.months + '</dt><dd class="liq">' + usd(r.liquidationPriceEnd) + ' (' + pct(r.dropToLiquidationEndPct) + ' drop)</dd>' : '')
+    + '</dl>';
+  $('out').innerHTML = h;
+  tb.innerHTML = r.rows.map(x => { const [c, label] = ST[x.status];
+    const fix = x.status === 'ok' ? '\u2014' : usd(x.cashToMarginCall) + ' cash, or ' + coins(x.coinsToMarginCall) + ' more coins';
+    const ltv = pct(x.ltv) + (added ? ' \u2192 ' + pct(x.endLtv) + ' at month ' + i.months : '');
+    const later = added && x.endStatus !== x.status ? '; ' + ST[x.endStatus][1].toLowerCase() + ' by month ' + i.months : '';
+    return '<tr><td>\u2212' + pct(x.dropPct) + (x.custom ? ' (yours)' : '') + '</td><td>' + usd(x.price) + '</td><td>' + ltv + '</td><td class="' + c + '">' + label + later + '</td><td>' + fix + '</td></tr>'; }).join('');
+}
+fill(EXAMPLE);
+document.getElementById('calc').addEventListener('input', () => { example = false; render(); });
+$('reset').onclick = () => { example = true; fill(EXAMPLE); render(); };
+$('blank').onclick = () => { example = false; fill({ interestMode: 'paid' }); render(); };
+render();
+</script>
+<footer><p><b>Not financial advice.</b> General information and a calculator for numbers you enter. Prices move and tax rules vary. Talk to a licensed professional or a nonprofit credit counselor before big decisions. All examples use made-up numbers.</p></footer>
+</main>
+<script data-goatcounter="https://stackvsdebt.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body></html>
