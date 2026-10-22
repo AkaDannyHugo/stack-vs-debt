@@ -1,0 +1,5 @@
+{
+  "_comment": "Single switch for /go/ links (COO-20261022-1). Read by src/affiliates.ts and build_pages.py. PENDING: no deployment exists yet (Vercel connector lacks project-create permission); swap ATTRIBUTION_BASE to the real preview/production URL once deployed. Cards stay OFF (AFFILIATE_CARDS_ENABLED=false).",
+  "ATTRIBUTION_BASE": "https://svd-attribution.vercel.app",
+  "GO_SLUGS": { "tax": "aff-tax", "wallet": "aff-wallet" }
+}
