@@ -86,7 +86,7 @@ export default function App() {
     <main>
       <header>
         <h1>Stack vs Debt</h1>
-        <p className="sub">Holding crypto or stocks while paying card interest? See how long your stack lasts, the price you need, and whether to sell now or wait.</p>
+        <p className="sub">Holding crypto or stocks while paying card interest? See how long your stack lasts, the price you need, and how selling now compares with waiting.</p>
         <p className="private">🔒 No login. Your numbers stay in this browser only.</p>
       </header>
 
@@ -163,10 +163,11 @@ export default function App() {
         </section>
 
         <section>
-          <h2>Verdict</h2>
+          <h2>Model result</h2>
           <div className="card verdict">
             <p className="headline">{v.headline}</p>
             <ul>{v.lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+            <p className="note">Model output from the numbers you entered, not a recommendation. Price paths are scenarios, not forecasts.</p>
           </div>
         </section>
 
@@ -176,7 +177,7 @@ export default function App() {
           <p className="note">{scenario === 'bear' ? 'Crypto −50% over 12 months, stocks −25%, then flat.' : scenario === 'flat' ? 'Prices stay where they are today.' : 'Crypto doubles over 24 months, stocks +10% a year.'}</p>
           {sims.map(r => (
             <div className={'card strat' + (r.strategy === v.best ? ' best' : '')} key={r.strategy}>
-              <div className="stitle">{STRATEGY_LABEL[r.strategy]}{r.strategy === v.best && <span className="pill">best in most cases</span>}</div>
+              <div className="stitle">{STRATEGY_LABEL[r.strategy]}{r.strategy === v.best && <span className="pill">highest in this model when prices fall or stay flat</span>}</div>
               {r.strategy === 'lump' && <div className="s">Sells {usd(r.soldToday)} today.</div>}
               <table><thead><tr><th></th>{r.snapshots.map(s => <th key={s.month}>{s.month / 12} yr</th>)}</tr></thead>
                 <tbody>
@@ -185,22 +186,22 @@ export default function App() {
                   <tr><td>Debt left</td>{r.snapshots.map(s => <td key={s.month}>{usd(s.debt)}</td>)}</tr>
                   <tr className="net"><td>You're worth</td>{r.snapshots.map(s => <td key={s.month} className={s.net < 0 ? 'bad' : 'good'}>{usd(s.net)}</td>)}</tr>
                 </tbody></table>
-              <div className="s">{r.runOutMonth ? `Stack runs out in month ${r.runOutMonth}. ` : ''}{r.debtFreeMonth !== null ? `Debt-free ${r.debtFreeMonth === 0 ? 'today' : 'in month ' + r.debtFreeMonth}. ` : ''}Interest paid over 3 yrs: {usd(r.interestPaid)}.</div>
+              <div className="s">{r.runOutMonth ? `Stack runs out in month ${r.runOutMonth}. ` : ''}{r.debtFreeMonth !== null ? `Debt paid off in the model ${r.debtFreeMonth === 0 ? 'today' : 'in month ' + r.debtFreeMonth}. ` : ''}Interest paid over 3 yrs: {usd(r.interestPaid)}.</div>
             </div>
           ))}
         </section>
 
         <section>
-          <h2>Month-by-month plan</h2>
+          <h2>Month by month (model)</h2>
           <div className="card">
             <p>See what gets sold each month and how your debt and stack change.</p>
-            <button onClick={() => setShowPlan(s => !s)}>{showPlan ? 'Hide plan' : 'Show month-by-month plan'}</button>
+            <button onClick={() => setShowPlan(s => !s)}>{showPlan ? 'Hide details' : 'Show month by month'}</button>
             {showPlan && (() => { const r = simulate(holdings, debts, st, v.best, scenario); return (
               <table className="plan"><thead><tr><th>Mo</th><th>Sell</th><th>Interest</th><th>Paid</th><th>Stack</th><th>Debt</th></tr></thead>
                 <tbody>{r.rows.map(x => <tr key={x.month}><td>{x.month}</td><td>{usd(x.sold)}</td><td>{usd(x.interest)}</td><td>{usd(x.paid)}</td><td>{usd(x.stackValue)}</td><td>{usd(x.debt)}</td></tr>)}</tbody></table>); })()}
           </div>
           <div className="card locked">
-            <p><b>Full plan: coming soon.</b> A printable PDF plan with the month each debt is paid off and what to sell when.</p>
+            <p><b>Full report (PDF): coming soon.</b> A printable PDF of these model results: the month each debt is paid off and the modeled sales, for the numbers you entered. Math only, not advice.</p>
             <button className={interested ? 'ghost' : ''} onClick={registerInterest} disabled={interested}>{interested ? 'Thanks, noted 👍' : "I'd want this"}</button>
             <p className="note">We never ask for your email or see your numbers.</p>
           </div>

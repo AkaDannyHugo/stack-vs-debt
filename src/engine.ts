@@ -121,7 +121,7 @@ export function breakEvenMultiple(holdings: Holding[], debts: Debt[], st: Settin
   return need / crypto;
 }
 
-export const STRATEGY_LABEL: Record<Strategy, string> = { wait: 'Wait (sell only to cover bills)', lump: 'Kill debt now (highest APR first)', drip: 'Sell a bit extra monthly' };
+export const STRATEGY_LABEL: Record<Strategy, string> = { wait: 'Wait (sell only to cover bills)', lump: 'Pay debt now (highest APR first)', drip: 'Sell a bit extra monthly' };
 
 export interface Verdict { headline: string; lines: string[]; best: Strategy }
 export function verdict(holdings: Holding[], debts: Debt[], st: Settings): Verdict {
@@ -133,7 +133,7 @@ export function verdict(holdings: Holding[], debts: Debt[], st: Settings): Verdi
   const fmt = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
   const lines: string[] = [];
   const int = monthlyInterest(debts);
-  lines.push(`Your debt costs about ${fmt(int)} a month in interest (${fmt(int * 12)} a year). That cost is guaranteed; price gains are not.`);
+  lines.push(`Your debt costs about ${fmt(int)} a month in interest (${fmt(int * 12)} a year). That cost is known; price gains are not.`);
   if (runway !== null) lines.push(`At today's prices, selling ${fmt(st.gap)} a month empties your stack in about ${runway} months.`);
   else lines.push(`At today's prices your stack outlasts your monthly selling.`);
   if (be === 0) lines.push(`Your assets already cover all your debt today, after fees and tax.`);
@@ -141,7 +141,7 @@ export function verdict(holdings: Holding[], debts: Debt[], st: Settings): Verdi
   else if (be !== null) lines.push(`To clear all debt with what you hold, crypto would need to go up about ${be.toFixed(1)}x from here.`);
   const bullWait = res('wait', 'bull'), bullBest = res(best, 'bull');
   if (best !== 'wait' && bullWait > bullBest) lines.push(`Waiting only wins if prices roughly double, and then by about ${fmt(bullWait - bullBest)} after 3 years.`);
-  if (best === 'wait') lines.push(`Your debt is cheap enough, or your stack big enough, that waiting comes out ahead even when prices fall.`);
-  const headline = best === 'wait' ? 'Waiting looks OK for you' : best === 'lump' ? 'Killing your highest-rate debt now leaves you better off in most cases' : 'Selling a bit extra each month toward your highest-rate debt leaves you better off in most cases';
+  if (best === 'wait') lines.push(`With these numbers, the debt is cheap enough, or the stack big enough, that waiting comes out ahead in the model even when prices fall.`);
+  const headline = 'In this model, ' + (best === 'wait' ? 'waiting' : best === 'lump' ? 'paying the highest-rate debt now' : 'selling a bit extra each month toward the highest-rate debt') + ' ends with the highest value when prices fall or stay flat';
   return { headline, lines, best };
 }
