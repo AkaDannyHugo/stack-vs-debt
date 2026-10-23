@@ -21,6 +21,7 @@ const EXAMPLE = {
   settings: { gap: 1200, feePct: 1, taxPct: 0, extraMonthly: 300, lumpCapPct: 100 } as Settings,
 };
 const KEY = 'stack-vs-debt:v1';
+const BASE = import.meta.env.BASE_URL; // '/stack-vs-debt/' on GitHub Pages, '/' on a root domain
 const uid = () => Math.random().toString(36).slice(2, 9);
 const usd = (n: number) => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
 const priceFmt = (n: number) => '$' + (n >= 100 ? Math.round(n).toLocaleString('en-US') : n.toLocaleString('en-US', { maximumFractionDigits: 4 }));
@@ -238,6 +239,7 @@ export default function App() {
       <footer>
         <p><b>Not financial advice.</b> {DISCLAIMER_FOOTER}{AFFILIATE_CARDS_ENABLED ? DISCLAIMER_FOOTER_AFFILIATE : ''}</p>
         <p>If your stack runs out, the model adds any unpaid gap to your highest-rate debt. Tax is a simple % of each sale, not a real tax calculation.</p>
+        <p className="legal"><a href={BASE + 'pricing/'}>Pricing</a> · <a href={BASE + 'terms/'}>Terms</a> · <a href={BASE + 'privacy/'}>Privacy</a> · <a href={BASE + 'refunds/'}>Refunds</a></p>
       </footer>
     </main>
   );
