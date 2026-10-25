@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { countInterest } from './analytics';
+import PricedOffer from './PricedOffer';
 import ResultCards from './ResultCards';
 import { AFFILIATE_CARDS_ENABLED } from './affiliates';
 import { DISCLAIMER_FOOTER, DISCLAIMER_FOOTER_AFFILIATE, DISCLAIMER_NEAR_RESULTS } from './disclaimer';
@@ -67,15 +67,6 @@ export default function App() {
   const [scenario, setScenario] = useState<Scenario>('flat');
   const [priceStatus, setPriceStatus] = useState('');
   const [showPlan, setShowPlan] = useState(false);
-  const [interested, setInterested] = useState<boolean>(() => { try { return localStorage.getItem('stack-vs-debt:interest') === '1'; } catch { return false; } });
-  const registerInterest = () => {
-    if (interested) return;
-    // Counts a click only. No email, no personal data, no form values are sent.
-    countInterest();
-    try { localStorage.setItem('stack-vs-debt:interest', '1'); } catch { /* ignore */ }
-    setInterested(true);
-  };
-
   useEffect(() => { if (shouldPersist({ isExample, fromUrl, hasSaved })) localStorage.setItem(KEY, JSON.stringify({ holdings, debts, settings: st })); }, [holdings, debts, st, isExample, fromUrl, hasSaved]);
   const touch = () => setIsExample(false);
 
@@ -113,6 +104,8 @@ export default function App() {
         <p className="sub">Holding crypto or stocks while paying card interest? See how long your stack lasts, the price you need, and how selling now compares with waiting.</p>
         <p className="private">🔒 No login. Your numbers stay in this browser only.</p>
       </header>
+
+      <PricedOffer place="home" />
 
       {fromUrl && <div className="banner">Pre-filled from a worked example (<b>made-up numbers</b>). Change any field to use your own.{hasSaved && <> Your saved numbers are untouched and edits here are not saved over them. <button className="link" onClick={backToSaved}>Back to my saved numbers</button></>}</div>}
       {isExample && !fromUrl && <div className="banner">You're looking at <b>example numbers</b> (made up). Change any field to use your own, or <button className="link" onClick={clearAll}>start blank</button>.</div>}
@@ -228,11 +221,7 @@ export default function App() {
               <table className="plan"><thead><tr><th>Mo</th><th>Sell</th><th>Interest</th><th>Paid</th><th>Stack</th><th>Debt</th></tr></thead>
                 <tbody>{r.rows.map(x => <tr key={x.month}><td>{x.month}</td><td>{usd(x.sold)}</td><td>{usd(x.interest)}</td><td>{usd(x.paid)}</td><td>{usd(x.stackValue)}</td><td>{usd(x.debt)}</td></tr>)}</tbody></table>); })()}
           </div>
-          <div className="card locked">
-            <p><b>Full report (PDF): coming soon.</b> A printable PDF of these model results: the month each debt is paid off and the modeled sales, for the numbers you entered. Math only, not advice.</p>
-            <button className={interested ? 'ghost' : ''} onClick={registerInterest} disabled={interested}>{interested ? 'Thanks, noted 👍' : "I'd want this"}</button>
-            <p className="note">We never ask for your email or see your numbers.</p>
-          </div>
+          <PricedOffer place="results" />
         </section>
       </>}
 
